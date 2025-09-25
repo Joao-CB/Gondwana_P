@@ -1,0 +1,32 @@
+<form id="rateForm">
+  Unit Name: <input type="text" name="Unit Name"><br>
+  Arrival: <input type="date" name="Arrival"><br>
+  Departure: <input type="date" name="Departure"><br>
+  Occupants: <input type="number" name="Occupants"><br>
+  Ages (comma-separated): <input type="text" name="Ages"><br>
+  <button type="submit">Get Rates</button>
+</form>
+
+<pre id="result"></pre>
+
+<script>
+document.getElementById('rateForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const form = e.target;
+    const data = {
+        "Unit Name": form["Unit Name"].value,
+        "Arrival": form["Arrival"].value,
+        "Departure": form["Departure"].value,
+        "Occupants": parseInt(form["Occupants"].value),
+        "Ages": form["Ages"].value.split(',').map(x=>parseInt(x))
+    };
+
+    const res = await fetch('/api/rates', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+});
+</script>
