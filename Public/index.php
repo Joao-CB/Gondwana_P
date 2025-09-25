@@ -18,16 +18,18 @@ $app->get('/', function ($request, $response, $args) {
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <!-- Navbar -->
+         <!-- Navbar -->
         <nav class="navbar">
-            <div class="nav-container">
-                <div class="logo"><a href="/"><img src="assets/logo.png" alt="Gondwana" class="logo-img"></a></div>
-                <ul class="nav-links">
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/index.html">Rates</a></li>
-                </ul>
-            </div>
-        </nav>
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <img src="https://cdn.brandfetch.io/idIGTw8iYF/w/252/h/64/theme/light/logo.png?c=1bxid64Mup7aczewSAYMX&t=1755114121246" alt="Gondwana Logo" height="50">
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/index.html">Rates</a></li>
+            </ul>
+        </div>
+    </nav>
 
         <!-- Hero Section -->
         <section class="hero">
@@ -67,7 +69,7 @@ $app->get('/', function ($request, $response, $args) {
 
         <!-- Footer -->
         <footer>
-            <p>&copy; <?= date("Y"); ?> Gondwana API. All rights reserved.</p>
+            <p>&copy;  Gondwana API. All rights reserved.</p>
         </footer>
     </body>
     </html>
