@@ -4,59 +4,139 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gondwana Rates API</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Get Rates</h1>
-    <form id="ratesForm">
-        <label for="unitTypeId">Unit Type ID:</label>
-        <input type="text" id="unitTypeId" name="unitTypeId" required><br><br>
+   <!-- Navbar -->
+   <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.php" class="logo">
+                <img src="/assests/gondwana logo.png" alt="Gondwana Logo" height="50">
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/index.html">Rates</a></li>
+            </ul>
+        </div>
+    </nav>
 
-        <label for="startDate">Arrival:</label>
-        <input type="date" id="startDate" name="Arrival" required><br><br>
+    <!-- Page content with top padding -->
+    <div class="page-content">
+        <div class="container">
+            <h1>Get Gondwana Rates</h1>
+            <form id="ratesForm">
+                <label for="unitTypeId">Unit Type ID:</label>
+                <input type="text" id="unitTypeId" name="unitTypeId" required>
 
-        <label for="endDate">Departure:</label>
-        <input type="date" id="endDate" name="Departure" required><br><br>
+                <label for="Arrival">Arrival:</label>
+                <input type="date" id="Arrival" name="Arrival" required>
 
-        <label for="occupants">Occupants:</label>
-        <input type="number" id="occupants" name="Occupants" required><br><br>
+                <label for="Departure">Departure:</label>
+                <input type="date" id="Departure" name="Departure" required>
 
-        <label for="ages">Ages (comma-separated):</label>
-        <input type="text" id="ages" name="Ages" placeholder="e.g., 25,14" required><br><br>
+                <label for="Occupants">Occupants:</label>
+                <input type="number" id="Occupants" name="Occupants" required>
 
-        <button type="submit">Get Rates</button>
-    </form>
+                <label for="Ages">Ages (comma-separated):</label>
+                <input type="text" id="Ages" name="Ages" placeholder="e.g., 25,14" required>
 
-    <h2>Rates:</h2>
+                <button type="submit">Get Rates</button>
+            </form>
+
+            <h2>Rates:</h2>
+            <table id="ratesTable">
+                <thead>
+                    <tr>
+                        <th>Unit Type ID</th>
+                        <th>Unit Name</th>
+                        <th>Arrival</th>
+                        <th>Departure</th>
+                        <th>Guest</th>
+                        <th>Rate</th>
+                        <th>Avg Daily Rate</th>
+                        <th>Rate Type</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <div class="json-response-container">
+    <h2>API Response JSON</h2>
     <pre id="response"></pre>
+</div>
 
-    <!-- Fix: Wrap JS in a <script> tag -->
+    </div>
+
     <script>
-    document.getElementById('ratesForm').addEventListener('submit', async function (e) {
+    document.getElementById('ratesForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-
         const form = e.target;
-        const data = {
+
+        const userAges = form.Ages.value.split(',').map(a => parseInt(a.trim()));
+        const adultsInput = userAges.filter(a => a >= 18);
+        const childrenInput = userAges.filter(a => a < 18);
+
+        const payload = {
             "Unit Type ID": parseInt(form.unitTypeId.value),
             "Arrival": form.Arrival.value,
             "Departure": form.Departure.value,
-            "Guests": form.Ages.value.split(',').map(age => ({
-                "Age Group": parseInt(age.trim()) >= 18 ? "Adult" : "Child"
+            "Guests": userAges.map(a => ({
+                "Age Group": a >= 18 ? "Adult" : "Child"
             }))
         };
+
+        const tableBody = document.querySelector('#ratesTable tbody');
+        tableBody.innerHTML = '';
 
         try {
             const response = await fetch('/api/rates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify(payload)
             });
 
-            const result = await response.json();
+            const text = await response.text();
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch {
+                throw new Error('Invalid JSON response: ' + text);
+            }
+
             document.getElementById('response').textContent = JSON.stringify(result, null, 2);
+
+            const legs = result.Legs || [];
+            legs.forEach(leg => {
+                (leg.Guests || []).forEach(guest => {
+                    let age;
+                    if (guest['Age Group'] === 'Adult') {
+                        age = adultsInput.shift();
+                    } else {
+                        age = childrenInput.shift();
+                    }
+                    guest.Age = age;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${leg['Unit Type ID'] || payload['Unit Type ID']}</td>
+                        <td>${leg['Special Rate Description'] || ''}</td>
+                        <td>${payload.Arrival}</td>
+                        <td>${payload.Departure}</td>
+                        <td>${guest['Age Group']} (${guest.Age})</td>
+                        <td>${leg['Total Charge'] || ''}</td>
+                        <td>${leg['Effective Average Daily Rate'] || ''}</td>
+                        <td>${leg['Category'] || ''}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            });
+
         } catch (err) {
-            document.getElementById('response').textContent = 'Error: ' + err.message;
+            document.getElementById('response').textContent = 'Error fetching rates: ' + err.message;
         }
     });
     </script>
+    <footer>
+            <p>&copy; <?= date("Y"); ?> Gondwana API. All rights reserved.</p>
+        </footer>
 </body>
 </html>
