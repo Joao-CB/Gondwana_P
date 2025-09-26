@@ -1,6 +1,5 @@
 name: QA Check
 
-# Trigger the workflow on pull requests targeting the main branch
 on:
   pull_request:
     branches:
@@ -15,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Set up PHP (adjust version if needed)
+      # Step 2: Set up PHP
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -25,10 +24,17 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
 
-      # Step 4: Run QA checks (for example: Composer validation)
+      # Step 4: Validate Composer files
       - name: Validate Composer files
         run: composer validate --strict
 
-      # Optional Step 5: Run PHPUnit tests if applicable
-      - name: Run Tests
-        run: vendor/bin/phpunit --colors=always
+      # Step 5: Run PHPUnit with coverage
+      - name: Run Tests with Coverage
+        run: vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+
+      # Step 6: SonarCloud Scan
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # GitHub auto-provided token
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}     # Your SonarCloud token
