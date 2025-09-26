@@ -10,16 +10,17 @@
      <!-- Navbar -->
 <nav class="navbar">
   <div class="nav-container">
+    <!-- Logo -->
     <a href="/" class="logo">
       <img src="https://cdn.brandfetch.io/idIGTw8iYF/w/252/h/64/theme/light/logo.png?c=1bxid64Mup7aczewSAYMX&t=1755114121246" alt="Gondwana Logo" height="50">
     </a>
 
-    <!-- Hamburger button -->
+    <!-- Hamburger button (visible on mobile) -->
     <button class="menu-toggle" aria-label="Toggle menu">
       ☰
     </button>
 
-    <!-- Links -->
+    <!-- Navigation links -->
     <ul class="nav-links">
       <li><a href="/">Home</a></li>
       <li><a href="/index.html">Rates</a></li>
@@ -28,10 +29,12 @@
 </nav>
 
 
-    <!-- Page content with top padding -->
+    <!-- Page content -->
     <div class="page-content">
         <div class="container">
             <h1>Get Gondwana Rates</h1>
+
+            <!-- Rates form -->
             <form id="ratesForm">
                 <label for="unitTypeId">Unit Type ID:</label>
                 <input type="text" id="unitTypeId" name="unitTypeId" required>
@@ -51,6 +54,7 @@
                 <button type="submit">Get Rates</button>
             </form>
 
+            <!-- Table to show rates -->
             <h2>Rates:</h2>
             <table id="ratesTable">
                 <thead>
@@ -68,22 +72,26 @@
                 <tbody></tbody>
             </table>
 
+            <!-- Raw API response -->
             <div class="json-response-container">
-    <h2>API Response JSON</h2>
-    <pre id="response"></pre>
-</div>
-
+                <h2>API Response JSON</h2>
+                <pre id="response"></pre>
+            </div>
+        </div>
     </div>
 
     <script>
+    // Handle form submit
     document.getElementById('ratesForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
+        e.preventDefault(); // stop reload
         const form = e.target;
 
+        // Split ages into adults and children
         const userAges = form.Ages.value.split(',').map(a => parseInt(a.trim()));
         const adultsInput = userAges.filter(a => a >= 18);
         const childrenInput = userAges.filter(a => a < 18);
 
+        // Payload for API
         const payload = {
             "Unit Type ID": parseInt(form.unitTypeId.value),
             "Arrival": form.Arrival.value,
@@ -94,15 +102,17 @@
         };
 
         const tableBody = document.querySelector('#ratesTable tbody');
-        tableBody.innerHTML = '';
+        tableBody.innerHTML = ''; // clear old data
 
         try {
+            // Send request to backend
             const response = await fetch('/api/rates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
+            // Parse response (safe)
             const text = await response.text();
             let result;
             try {
@@ -111,8 +121,10 @@
                 throw new Error('Invalid JSON response: ' + text);
             }
 
+            // Show raw JSON
             document.getElementById('response').textContent = JSON.stringify(result, null, 2);
 
+            // Populate table
             const legs = result.Legs || [];
             legs.forEach(leg => {
                 (leg.Guests || []).forEach(guest => {
@@ -139,18 +151,23 @@
             });
 
         } catch (err) {
+            // Show error if API fails
             document.getElementById('response').textContent = 'Error fetching rates: ' + err.message;
         }
     });
-    const menuToggle = document.querySelector(".menu-toggle");
-  const navLinks = document.querySelector(".nav-links");
 
-  menuToggle.addEventListener("click", () => {
-    navLinks.classList.toggle("show"); // matches your CSS
-  });
+    // Mobile menu toggle
+    const menuToggle = document.querySelector(".menu-toggle");
+    const navLinks = document.querySelector(".nav-links");
+
+    menuToggle.addEventListener("click", () => {
+        navLinks.classList.toggle("show"); // toggles visibility
+    });
     </script>
+
+    <!-- Footer -->
     <footer>
-            <p>&copy;  Gondwana API. All rights reserved.</p>
-        </footer>
+        <p>&copy; Gondwana API. All rights reserved.</p>
+    </footer>
 </body>
 </html>
