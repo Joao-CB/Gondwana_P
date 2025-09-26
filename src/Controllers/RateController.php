@@ -4,12 +4,22 @@ namespace Joao\ApiP\Controllers;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 
 class RateController
 {
-    public function getRates(Request $request, Response $response, $args)
+    private Client $client;
+    private string $apiUrl;
+
+    public function __construct(Client $client = null, ?string $apiUrl = null)
     {
-        // Safely read JSON body
+        // Use injected client or default
+        $this->client = $client ?? new Client();
+        $this->apiUrl = $apiUrl ?? ($_ENV['REMOTE_API_URL'] ?? 'https://dev.gondwana-collection.com/Web-Store/Rates/Rates.php');
+    }
+
+    public function getRates(Request $request, Response $response, $args): Response
+    {
         $body = (string) $request->getBody();
         $data = json_decode($body, true);
 
@@ -21,10 +31,6 @@ class RateController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
 
-        $client = new Client();
-        $apiUrl = $_ENV['REMOTE_API_URL'] ?? 'https://dev.gondwana-collection.com/Web-Store/Rates/Rates.php';
-
-        // Ensure required params exist
         $params = [
             'Unit Type ID' => $data['Unit Type ID'] ?? null,
             'Arrival'      => $data['Arrival'] ?? null,
@@ -33,17 +39,16 @@ class RateController
         ];
 
         try {
-            $apiResponse = $client->post($apiUrl, ['json' => $params]);
-
+            $apiResponse = $this->client->post($this->apiUrl, ['json' => $params]);
             $rates = json_decode($apiResponse->getBody()->getContents(), true);
+
             $response->getBody()->write(json_encode($rates));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-        } catch (\Exception $e) {
-            // Debug log (you can use Monolog or plain error_log)
+        } catch (GuzzleException $e) {
             error_log("RateController error: " . $e->getMessage());
 
             $response->getBody()->write(json_encode([
-                'error'   => 'Failed to fetch rates',
+                'error' => 'Failed to fetch rates',
                 'message' => $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
