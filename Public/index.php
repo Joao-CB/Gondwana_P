@@ -21,14 +21,21 @@ $app->get('/', function ($request, $response, $args) {
          <!-- Navbar -->
         <nav class="navbar">
         <div class="nav-container">
-            <a href="/" class="logo">
-                <img src="https://cdn.brandfetch.io/idIGTw8iYF/w/252/h/64/theme/light/logo.png?c=1bxid64Mup7aczewSAYMX&t=1755114121246" alt="Gondwana Logo" height="50">
-            </a>
-            <ul class="nav-links">
-                <li><a href="/">Home</a></li>
-                <li><a href="/index.html">Rates</a></li>
-            </ul>
-        </div>
+         <a href="/" class="logo">
+         <img src="https://cdn.brandfetch.io/idIGTw8iYF/w/252/h/64/theme/light/logo.png?c=1bxid64Mup7aczewSAYMX&t=1755114121246" alt="Gondwana Logo" height="50">
+       </a>
+
+    <!-- Hamburger button -->
+    <button class="menu-toggle" aria-label="Toggle menu">
+      ☰
+    </button>
+
+    <!-- Links -->
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/index.html">Rates</a></li>
+    </ul>
+    </div>
     </nav>
 
         <!-- Hero Section -->
@@ -71,6 +78,14 @@ $app->get('/', function ($request, $response, $args) {
         <footer>
             <p>&copy;  Gondwana API. All rights reserved.</p>
         </footer>
+        <script>
+         const menuToggle = document.querySelector(".menu-toggle");
+         const navLinks = document.querySelector(".nav-links");
+
+         menuToggle.addEventListener("click", () => {
+        navLinks.classList.toggle("show"); // matches your CSS
+         });</script>
+
     </body>
     </html>
     HTML;

@@ -29,9 +29,11 @@ body {
   justify-content: space-between;
   align-items: center;
 }
+
 .logo-img {
   height: 40px;
 }
+
 .nav-links {
   list-style: none;
   display: flex;
@@ -43,8 +45,19 @@ body {
   color: #666;
   transition: color 0.3s ease;
 }
+
 .nav-links a:hover {
   color: #000;
+}
+
+/* Hamburger button (hidden on desktop) */
+.menu-toggle {
+  display: none;
+  font-size: 1.8rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #444;
 }
 
 /* Hero Section */
@@ -168,10 +181,10 @@ footer {
   box-shadow: 0 0 15px rgba(0,0,0,0.1);
 }
 .container h1 {
-    text-align: center;   /* center the heading */
-    margin-bottom: 20px;  /* space below heading */
-    color: #444;          /* optional: match your site color */
-    font-size: 2rem;      /* adjust size if needed */
+  text-align: center;   /* center the heading */
+  margin-bottom: 20px;  /* space below heading */
+  color: #444;          /* optional: match your site color */
+  font-size: 2rem;      /* adjust size if needed */
 }
 
 /* Form Styling */
@@ -234,36 +247,56 @@ table tr:nth-child(even) {
 /* Responsive */
 @media (max-width: 768px) {
   .nav-links {
-    display: none;
+    display: none;               /* hide menu by default */
+    flex-direction: column;
+    background: #fdfbf7;
+    position: absolute;
+    top: 60px;
+    right: 0;
+    width: 200px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    padding: 1rem;
   }
+
+  .nav-links.show {
+    display: flex;               /* show menu when toggled */
+  }
+
+  .menu-toggle {
+    display: block;              /* show hamburger on mobile */
+  }
+
   .hero-content h1 {
     font-size: 2rem;
   }
+
   .hero-content p {
     font-size: 1rem;
   }
+
   .cards {
     flex-direction: column;
     gap: 15px;
   }
 }
+
 .json-response-container {
-    max-width: 700px;     /* keep it compact */
-    margin: 20px auto;    /* center the container */
-    text-align: center;   /* center the heading */
+  max-width: 700px;     /* keep it compact */
+  margin: 20px auto;    /* center the container */
+  text-align: center;   /* center the heading */
 }
 
 .json-response-container h2 {
-    color: #444;          /* heading color */
-    margin-bottom: 10px;
+  color: #444;          /* heading color */
+  margin-bottom: 10px;
 }
 
 #response {
-    background: #000;      /* black background */
-    color: #0f0;           /* green text for JSON */
-    padding: 20px;
-    border-radius: 8px;
-    overflow-x: auto;      /* scroll if content is wide */
-    font-family: monospace;
-    text-align: left;      /* keep JSON left-aligned inside block */
+  background: #000;      /* black background */
+  color: #0f0;           /* green text for JSON */
+  padding: 20px;
+  border-radius: 8px;
+  overflow-x: auto;      /* scroll if content is wide */
+  font-family: monospace;
+  text-align: left;      /* keep JSON left-aligned inside block */
 }
