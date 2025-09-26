@@ -1,6 +1,5 @@
 name: QA Check
 
-# Trigger the workflow on pull requests targeting the main branch
 on:
   pull_request:
     branches:
@@ -11,24 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
+      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Set up PHP (adjust version if needed)
+      # Set up PHP
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
 
-      # Step 3: Install Composer dependencies
+      # Install Composer dependencies
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
 
-      # Step 4: Run QA checks (for example: Composer validation)
+      # Composer validation
       - name: Validate Composer files
         run: composer validate --strict
 
-      # Optional Step 5: Run PHPUnit tests if applicable
+      # Run PHPUnit tests
       - name: Run Tests
         run: vendor/bin/phpunit --colors=always
+
+      # Run SonarQube scan
+      - name: SonarQube Scan
+        uses: sonarsource/sonarcloud-github-action@v2
+        with:
+          projectKey: ${{ secrets.SONAR_PROJECT_KEY }}
+          organization: ${{ secrets.SONAR_ORGANIZATION }}
+          token: ${{ secrets.SONAR_TOKEN }}
