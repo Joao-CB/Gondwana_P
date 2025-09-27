@@ -5,10 +5,11 @@ use PHPUnit\Framework\TestCase;
 use Joao\ApiP\Services\RemoteRatesService;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Exception\ConnectException;
 
 class RemoteRatesServiceTest extends TestCase
 {
-    private $payload;
+    private array $payload;
 
     protected function setUp(): void
     {
@@ -22,51 +23,44 @@ class RemoteRatesServiceTest extends TestCase
         putenv('REMOTE_API_URL=https://fake-api.test/rates');
     }
 
-    public function testFetchRatesSuccess()
+    public function testFetchRatesSuccess(): void
     {
         $mockClient = $this->createMock(Client::class);
-        $mockResponse = new Response(200, [], json_encode(['rate' => 100]));
-        $mockClient->method('post')->willReturn($mockResponse);
+        $mockClient->method('post')
+            ->willReturn(new Response(200, [], json_encode(['rate' => 100])));
 
-        $service = new class($mockClient) extends RemoteRatesService {
-            public function __construct($client) { $this->client = $client; }
-            public function fetchRates($payload) {
-                $converted = [
-                    'Unit Type ID' => explode(',', getenv('UNIT_TYPE_IDS'))[0],
-                    'Arrival' => date('Y-m-d', strtotime($payload['Arrival'])),
-                    'Departure' => date('Y-m-d', strtotime($payload['Departure'])),
-                    'Guests' => array_map(fn($age) => ['Age Group' => $age >= 18 ? 'Adult' : 'Child'], $payload['Ages'])
-                ];
-                $response = $this->client->post(getenv('REMOTE_API_URL'), ['json' => $converted]);
-                return json_decode($response->getBody(), true);
-            }
-        };
-
+        $service = new RemoteRatesService($mockClient);
         $result = $service->fetchRates($this->payload);
+
         $this->assertEquals(['rate' => 100], $result);
     }
 
-    public function testFetchRatesThrowsException()
+    public function testFetchRatesThrowsException(): void
     {
         $mockClient = $this->createMock(Client::class);
-        $mockClient->method('post')->willThrowException(new \Exception("API error"));
+        $mockClient->method('post')
+            ->willThrowException(new ConnectException(
+                'Connection error',
+                new \GuzzleHttp\Psr7\Request('POST', 'test')
+            ));
 
-        $service = new class($mockClient) extends RemoteRatesService {
-            public function __construct($client) { $this->client = $client; }
-            public function fetchRates($payload) {
-                $converted = [
-                    'Unit Type ID' => explode(',', getenv('UNIT_TYPE_IDS'))[0],
-                    'Arrival' => date('Y-m-d', strtotime($payload['Arrival'])),
-                    'Departure' => date('Y-m-d', strtotime($payload['Departure'])),
-                    'Guests' => array_map(fn($age) => ['Age Group' => $age >= 18 ? 'Adult' : 'Child'], $payload['Ages'])
-                ];
-                $response = $this->client->post(getenv('REMOTE_API_URL'), ['json' => $converted]);
-                return json_decode($response->getBody(), true);
-            }
-        };
+        $service = new RemoteRatesService($mockClient);
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage("API error");
+        $this->expectException(ConnectException::class);
+        $this->expectExceptionMessage('Connection error');
+
+        $service->fetchRates($this->payload);
+    }
+
+    public function testFetchRatesThrowsIfNoUnitTypeId(): void
+    {
+        putenv('UNIT_TYPE_IDS=');
+
+        $mockClient = $this->createMock(Client::class);
+        $service = new RemoteRatesService($mockClient);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('No Unit Type ID provided in environment');
 
         $service->fetchRates($this->payload);
     }

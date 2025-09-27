@@ -5,9 +5,9 @@ use PHPUnit\Framework\TestCase;
 use Joao\ApiP\Controllers\RateController;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Psr7\Response;
+use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Utils;
 
@@ -20,9 +20,22 @@ class RateControllerTest extends TestCase
         return new Client(['handler' => $handlerStack]);
     }
 
+    private function createController(Client $client): RateController
+    {
+        return new RateController($client);
+    }
+
+    private function createRequest(array $payload): ServerRequestInterface
+    {
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->method('getBody')->willReturn(Utils::streamFor(json_encode($payload)));
+        return $request;
+    }
+
     public function testInvalidJsonReturns400()
     {
-        $controller = new RateController();
+        $client = $this->createMockClient([]);
+        $controller = $this->createController($client);
 
         $request = $this->createMock(ServerRequestInterface::class);
         $request->method('getBody')->willReturn(Utils::streamFor('invalid-json'));
@@ -31,7 +44,7 @@ class RateControllerTest extends TestCase
         $result = $controller->getRates($request, $response, []);
 
         $this->assertEquals(400, $result->getStatusCode());
-        $this->assertStringContainsString('Invalid JSON payload', (string) $result->getBody());
+        $this->assertStringContainsString('Invalid JSON payload', (string)$result->getBody());
     }
 
     public function testSuccessResponseReturns200()
@@ -39,40 +52,20 @@ class RateControllerTest extends TestCase
         $mockClient = $this->createMockClient([
             new GuzzleResponse(200, [], json_encode(['rate' => 100]))
         ]);
+        $controller = $this->createController($mockClient);
 
-        $controller = new class($mockClient) extends RateController {
-            private $mockClient;
-            public function __construct($client) { $this->mockClient = $client; }
-            public function getRates($request, $response, $args) {
-                $client = $this->mockClient;
-                $body = (string) $request->getBody();
-                $data = json_decode($body, true);
-                $params = [
-                    'Unit Type ID' => $data['Unit Type ID'] ?? null,
-                    'Arrival' => $data['Arrival'] ?? null,
-                    'Departure' => $data['Departure'] ?? null,
-                    'Guests' => $data['Guests'] ?? []
-                ];
-                $apiResponse = $client->post('http://mock', ['json' => $params]);
-                $rates = json_decode($apiResponse->getBody()->getContents(), true);
-                $response->getBody()->write(json_encode($rates));
-                return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-            }
-        };
-
-        $request = $this->createMock(ServerRequestInterface::class);
-        $request->method('getBody')->willReturn(Utils::streamFor(json_encode([
+        $request = $this->createRequest([
             'Unit Type ID' => 1,
             'Arrival' => '2025-10-01',
             'Departure' => '2025-10-05',
             'Guests' => [2, 1]
-        ])));
+        ]);
 
         $response = new Response();
         $result = $controller->getRates($request, $response, []);
 
         $this->assertEquals(200, $result->getStatusCode());
-        $body = json_decode((string) $result->getBody(), true);
+        $body = json_decode((string)$result->getBody(), true);
         $this->assertArrayHasKey('rate', $body);
         $this->assertEquals(100, $body['rate']);
     }
@@ -80,50 +73,26 @@ class RateControllerTest extends TestCase
     public function testApiExceptionReturns500()
     {
         $mockClient = $this->createMockClient([
-            new \GuzzleHttp\Exception\ConnectException('Connection error', new \GuzzleHttp\Psr7\Request('POST', 'test'))
+            new \GuzzleHttp\Exception\ConnectException(
+                'Connection error',
+                new \GuzzleHttp\Psr7\Request('POST', 'test')
+            )
         ]);
+        $controller = $this->createController($mockClient);
 
-        $controller = new class($mockClient) extends RateController {
-            private $mockClient;
-            public function __construct($client) { $this->mockClient = $client; }
-            public function getRates($request, $response, $args) {
-                $client = $this->mockClient;
-                $body = (string) $request->getBody();
-                $data = json_decode($body, true);
-                $params = [
-                    'Unit Type ID' => $data['Unit Type ID'] ?? null,
-                    'Arrival' => $data['Arrival'] ?? null,
-                    'Departure' => $data['Departure'] ?? null,
-                    'Guests' => $data['Guests'] ?? []
-                ];
-                try {
-                    $apiResponse = $client->post('http://mock', ['json' => $params]);
-                    $rates = json_decode($apiResponse->getBody()->getContents(), true);
-                    $response->getBody()->write(json_encode($rates));
-                    return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-                } catch (\Exception $e) {
-                    $response->getBody()->write(json_encode([
-                        'error' => 'Failed to fetch rates',
-                        'message' => $e->getMessage()
-                    ]));
-                    return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
-                }
-            }
-        };
-
-        $request = $this->createMock(ServerRequestInterface::class);
-        $request->method('getBody')->willReturn(Utils::streamFor(json_encode([
+        $request = $this->createRequest([
             'Unit Type ID' => 1,
             'Arrival' => '2025-10-01',
             'Departure' => '2025-10-05',
             'Guests' => [2, 1]
-        ])));
+        ]);
 
         $response = new Response();
         $result = $controller->getRates($request, $response, []);
 
         $this->assertEquals(500, $result->getStatusCode());
-        $body = json_decode((string) $result->getBody(), true);
+        $body = json_decode((string)$result->getBody(), true);
         $this->assertEquals('Failed to fetch rates', $body['error']);
+        $this->assertEquals('Connection error', $body['message']);
     }
 }
