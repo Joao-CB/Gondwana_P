@@ -1,8 +1,11 @@
 name: QA Check
 
-# Trigger the workflow on pull requests to main
+# Trigger the workflow on pull requests and pushes to main
 on:
   pull_request:
+    branches:
+      - main
+  push:
     branches:
       - main
 
