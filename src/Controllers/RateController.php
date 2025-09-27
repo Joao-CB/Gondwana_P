@@ -11,6 +11,8 @@ class RateController
     private Client $client;
     private string $apiUrl;
 
+    private const JSON_CONTENT_TYPE = 'application/json';
+
     public function __construct(Client $client = null, ?string $apiUrl = null)
     {
         // Use injected client or default
@@ -18,7 +20,7 @@ class RateController
         $this->apiUrl = $apiUrl ?? ($_ENV['REMOTE_API_URL'] ?? 'https://dev.gondwana-collection.com/Web-Store/Rates/Rates.php');
     }
 
-    public function getRates(Request $request, Response $response, $args): Response
+    public function getRates(Request $request, Response $response): Response
     {
         $body = (string) $request->getBody();
         $data = json_decode($body, true);
@@ -28,7 +30,7 @@ class RateController
                 'error' => 'Invalid JSON payload',
                 'received' => $body
             ]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            return $response->withHeader('Content-Type', self::JSON_CONTENT_TYPE)->withStatus(400);
         }
 
         $params = [
@@ -43,7 +45,7 @@ class RateController
             $rates = json_decode($apiResponse->getBody()->getContents(), true);
 
             $response->getBody()->write(json_encode($rates));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+            return $response->withHeader('Content-Type', self::JSON_CONTENT_TYPE)->withStatus(200);
         } catch (GuzzleException $e) {
             error_log("RateController error: " . $e->getMessage());
 
@@ -51,7 +53,7 @@ class RateController
                 'error' => 'Failed to fetch rates',
                 'message' => $e->getMessage()
             ]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+            return $response->withHeader('Content-Type', self::JSON_CONTENT_TYPE)->withStatus(500);
         }
     }
 }
