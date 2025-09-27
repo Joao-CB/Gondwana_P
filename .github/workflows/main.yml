@@ -4,36 +4,53 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 jobs:
   qa:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Step 2: Set up PHP
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: mbstring, pcov
 
+      # Step 3: Install Composer dependencies
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
 
+      # Step 4: Validate Composer files
       - name: Validate Composer files
         run: composer validate --strict
 
+      # Step 5: Create logs folder for coverage
       - name: Create logs folder
         run: mkdir -p build/logs
 
+      # Step 6: Run PHPUnit with coverage
       - name: Run Tests with Coverage
         run: vendor/bin/phpunit --coverage-clover build/logs/clover.xml
 
+      # Step 7: SonarCloud Scan
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROJECT_KEY: Joao-CB_Gondwana_P
-          SONAR_ORGANIZATION: Joao-CB
+        with:
+          args: >
+            -Dsonar.projectKey=Joao-CB_Gondwana_P
+            -Dsonar.organization=Joao-CB
+            -Dsonar.sources=src
+            -Dsonar.tests=tests
+            -Dsonar.php.coverage.reportPaths=build/logs/clover.xml
+            -Dsonar.verbose=true
