@@ -1,5 +1,6 @@
 name: QA Check
 
+# Trigger the workflow on pull requests to main
 on:
   pull_request:
     branches:
@@ -10,11 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 0: Clean workspace to remove any cached files
-      - name: Clean workspace
-        run: git clean -fdx
-
-      # Step 1: Checkout code
+      # Step 1: Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -32,19 +29,31 @@ jobs:
       - name: Validate Composer files
         run: composer validate --strict
 
-      # Step 5: Create logs folder
+      # Step 5: Create logs folder for coverage report
       - name: Create logs folder
         run: mkdir -p build/logs
 
-      # Step 6: Run Tests with Coverage
+      # Step 6: Run PHPUnit with code coverage
       - name: Run Tests with Coverage
         run: vendor/bin/phpunit --coverage-clover build/logs/clover.xml
 
-      # Step 7: SonarCloud Scan
+      # Step 7: Run SonarCloud Scan
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v1
+        uses: SonarSource/sonarcloud-github-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Step 7a: Add your SonarCloud token here (create a GitHub secret called SONAR_TOKEN)
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+          # Step 7b: Add your SonarCloud project key here
           SONAR_PROJECT_KEY: Joao-CB_Gondwana_P
+
+          # Step 7c: Add your SonarCloud organization here
           SONAR_ORGANIZATION: Joao-CB
+
+        # Step 7d: Pass extra arguments to the scanner
+        with:
+          args: >
+            -Dsonar.login=$SONAR_TOKEN
+            -Dsonar.projectKey=$SONAR_PROJECT_KEY
+            -Dsonar.organization=$SONAR_ORGANIZATION
+            -Dsonar.php.coverage.reportPaths=build/logs/clover.xml
