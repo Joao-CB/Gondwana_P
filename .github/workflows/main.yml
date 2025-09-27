@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Clean workspace
-      - name: Clean workspace
-        run: git clean -fdx
-
-      # Step 2: Checkout repository
+      # Step 1: Checkout repository first
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # Step 2: Clean workspace
+      - name: Clean workspace
+        run: git clean -fdx
 
       # Step 3: Set up PHP
       - name: Set up PHP
