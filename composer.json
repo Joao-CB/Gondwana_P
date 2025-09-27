@@ -1,9 +1,15 @@
 {
     "name": "joao/api_p",
     "description": "Simple REST API + frontend to interact with Gondwana API",
+    "license": "proprietary",
     "autoload": {
         "psr-4": {
             "Joao\\ApiP\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Joao\\ApiP\\Tests\\": "tests/"
         }
     },
     "authors": [
@@ -11,11 +17,13 @@
             "name": "Joao Baptista",
             "email": "84639841+Joao-CB@users.noreply.github.com"
         }
-    ],
+    ], 
     "require": {
         "slim/slim": "^4.0",
-        "guzzlehttp/guzzle": "^7.10",
+        "guzzlehttp/guzzle": "^7.0",
         "vlucas/phpdotenv": "^5.6",
-        "slim/psr7": "^1.7"
+        "slim/psr7": "^1.7",
+        "phpunit/phpunit": "^9.6",
+        "guzzlehttp/psr7": "^2.0"
     }
 }
