@@ -11,6 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up PHP
+      # Step 0: Clean workspace to remove any cached files
+      - name: Clean workspace
+        run: git clean -fdx
+
       # Step 1: Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,9 +30,25 @@ jobs:
         with:
           php-version: '8.2'
 
-      # Step 3: Install Composer dependencies
+      # Install Composer dependencies
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
+        
+      # Composer validation
+      - name: Validate Composer files
+        run: composer validate --strict
+
+      # Run PHPUnit tests
+      - name: Run Tests
+        run: vendor/bin/phpunit --colors=always
+
+      # Run SonarQube scan
+      - name: SonarQube Scan
+        uses: sonarsource/sonarcloud-github-action@v2
+        with:
+          projectKey: ${{ secrets.SONAR_PROJECT_KEY }}
+          organization: ${{ secrets.SONAR_ORGANIZATION }}
+          token: ${{ secrets.SONAR_TOKEN }}
 
       # Step 4: Validate Composer files
       - name: Validate Composer files
@@ -49,6 +74,7 @@ jobs:
 
           # Step 7c: Add your SonarCloud organization here
           SONAR_ORGANIZATION: Joao-CB
+
 
         # Step 7d: Pass extra arguments to the scanner
         with:
