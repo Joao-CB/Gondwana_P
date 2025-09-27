@@ -4,16 +4,17 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
 
 jobs:
   qa:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
+      # Step 0: Clean workspace to remove any cached files
+      - name: Clean workspace
+        run: git clean -fdx
+
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -22,7 +23,6 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, pcov
 
       # Step 3: Install Composer dependencies
       - name: Install Composer dependencies
@@ -32,11 +32,11 @@ jobs:
       - name: Validate Composer files
         run: composer validate --strict
 
-      # Step 5: Create logs folder for coverage
+      # Step 5: Create logs folder
       - name: Create logs folder
         run: mkdir -p build/logs
 
-      # Step 6: Run PHPUnit with coverage
+      # Step 6: Run Tests with Coverage
       - name: Run Tests with Coverage
         run: vendor/bin/phpunit --coverage-clover build/logs/clover.xml
 
@@ -46,11 +46,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.projectKey=Joao-CB_Gondwana_P
-            -Dsonar.organization=Joao-CB
-            -Dsonar.sources=src
-            -Dsonar.tests=tests
-            -Dsonar.php.coverage.reportPaths=build/logs/clover.xml
-            -Dsonar.verbose=true
+          SONAR_PROJECT_KEY: Joao-CB_Gondwana_P
+          SONAR_ORGANIZATION: Joao-CB
