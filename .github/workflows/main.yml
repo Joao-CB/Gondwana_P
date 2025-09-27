@@ -75,7 +75,6 @@ jobs:
           # Step 7c: Add your SonarCloud organization here
           SONAR_ORGANIZATION: Joao-CB
 
-
         # Step 7d: Pass extra arguments to the scanner
         with:
           args: >
