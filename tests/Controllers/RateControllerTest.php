@@ -13,6 +13,9 @@ use GuzzleHttp\Psr7\Utils;
 
 class RateControllerTest extends TestCase
 {
+    /**
+     * Create a mock Guzzle client that will return predefined responses.
+     */
     private function createMockClient(array $responses): Client
     {
         $mock = new MockHandler($responses);
@@ -20,11 +23,17 @@ class RateControllerTest extends TestCase
         return new Client(['handler' => $handlerStack]);
     }
 
+    /**
+     * Create an instance of RateController using the provided client.
+     */
     private function createController(Client $client): RateController
     {
         return new RateController($client);
     }
 
+    /**
+     * Create a mock HTTP request with a JSON payload.
+     */
     private function createRequest(array $payload): ServerRequestInterface
     {
         $request = $this->createMock(ServerRequestInterface::class);
@@ -32,6 +41,9 @@ class RateControllerTest extends TestCase
         return $request;
     }
 
+    /**
+     * Test that invalid JSON input returns a 400 Bad Request response.
+     */
     public function testInvalidJsonReturns400()
     {
         $client = $this->createMockClient([]);
@@ -47,6 +59,10 @@ class RateControllerTest extends TestCase
         $this->assertStringContainsString('Invalid JSON payload', (string)$result->getBody());
     }
 
+    /**
+     * Test that a valid payload returns a successful 200 response
+     * and the expected 'rate' key in the body.
+     */
     public function testSuccessResponseReturns200()
     {
         $mockClient = $this->createMockClient([
@@ -70,6 +86,10 @@ class RateControllerTest extends TestCase
         $this->assertEquals(100, $body['rate']);
     }
 
+    /**
+     * Test that a Guzzle exception (e.g., connection error) results in a 500 response
+     * with the expected error message returned.
+     */
     public function testApiExceptionReturns500()
     {
         $mockClient = $this->createMockClient([
