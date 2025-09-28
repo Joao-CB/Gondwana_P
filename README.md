@@ -14,7 +14,8 @@ This project provides a RESTful API to fetch Gondwana rates and a simple fronten
 <img width="1901" height="899" alt="image" src="https://github.com/user-attachments/assets/4e8055ed-ec9d-4ca3-b889-b56add743474" />
 <img width="1891" height="917" alt="image" src="https://github.com/user-attachments/assets/69cbfff7-b8f7-4d44-b1f1-d754bf88a37c" />
 
-**SonarQube:**
+**SonarQube Analysis:**
+This screenshot shows the results of the SonarCloud code analysis. The Quality Gate passed, indicating the code meets the defined quality standards. No new issues were detected, and there are no security hotspots or duplicated code, which suggests the code is clean and well maintained.
 <img width="1894" height="927" alt="image" src="https://github.com/user-attachments/assets/eac85f66-b72e-45d7-b583-f76bfe69ed52" />
 
 
