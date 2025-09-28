@@ -1,4 +1,4 @@
-# Gondwana Rates API
+# Gondwana Rates API 
 
 ## Overview
 This project provides a RESTful API to fetch Gondwana rates and a simple frontend to interact with it. Includes a landing page for quick navigation.
